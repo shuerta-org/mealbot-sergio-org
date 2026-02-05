@@ -108,9 +108,7 @@ def reset_engine() -> None:
     _engine = None
 
 
-async def get_connection(
-    settings: Settings | None = None,
-) -> AsyncGenerator[AsyncConnection, None]:
+async def get_connection() -> AsyncGenerator[AsyncConnection, None]:
     """FastAPI dependency that yields database connections.
 
     This async generator provides a database connection from the pool
@@ -122,13 +120,10 @@ async def get_connection(
             result = await conn.execute(text("SELECT 1"))
             return {"data": result.fetchall()}
 
-    Args:
-        settings: Application settings. If None, uses get_settings().
-
     Yields:
         AsyncConnection: A database connection from the pool.
     """
-    engine = await init_engine(settings)
+    engine = await init_engine()
     async with engine.connect() as conn:
         yield conn
 
