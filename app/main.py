@@ -23,6 +23,7 @@ from fastapi.responses import JSONResponse
 from .cors import setup_cors
 from .database import dispose_engine, init_engine
 from .logging_config import configure_logging, get_logger
+from .organizations import router as organizations_router
 
 # Configure logging at module load time
 configure_logging()
@@ -97,6 +98,11 @@ def create_app() -> FastAPI:
 
     # Register health check endpoint
     app.add_api_route("/health", health_check, methods=["GET"])
+
+    # Include organizations router
+    # Reference: Go server.go lines 97-99 - /org, /orgs, /crossmatchtrait routes
+    app.include_router(organizations_router)
+    logger.info("Organizations router registered")
 
     logger.info("FastAPI application created and configured")
 

@@ -152,10 +152,6 @@ class TestGetConnection:
     @pytest.mark.asyncio
     async def test_get_connection_yields_connection(self):
         """Test get_connection yields a database connection."""
-        settings = Settings(
-            database_url="postgresql://user:pass@localhost:5432/testdb",
-        )
-
         mock_connection = AsyncMock()
         mock_engine = MagicMock()
         mock_engine.connect.return_value.__aenter__ = AsyncMock(
@@ -163,8 +159,9 @@ class TestGetConnection:
         )
         mock_engine.connect.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        with patch("app.database.create_async_engine", return_value=mock_engine):
-            async for conn in get_connection(settings):
+        with patch("app.database.init_engine", new_callable=AsyncMock) as mock_init:
+            mock_init.return_value = mock_engine
+            async for conn in get_connection():
                 assert conn is mock_connection
 
 
