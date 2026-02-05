@@ -211,3 +211,64 @@ class TestHealthCheckFunction:
         response = await health_check()
         # Access the body content directly
         assert response.body == b'{"status":"healthy","service":"mealbot"}'
+
+
+class TestStaticFiles:
+    """Tests for static file serving.
+
+    Reference: Go server.go line 103 - http.FileServer(http.Dir("./static"))
+    Static files (privacy.html, sample.csv) are served at root path
+    without authentication.
+    """
+
+    def test_privacy_html_returns_200(self, client):
+        """Test GET /privacy.html returns 200 OK."""
+        response = client.get("/privacy.html")
+        assert response.status_code == 200
+
+    def test_privacy_html_returns_html_content(self, client):
+        """Test /privacy.html returns HTML content with expected structure."""
+        response = client.get("/privacy.html")
+        assert "text/html" in response.headers.get("content-type", "")
+        # Verify content from the actual file
+        assert "Privacy Policy" in response.text
+        assert "<!DOCTYPE html>" in response.text
+        assert "John Amadeo Daniswara" in response.text
+
+    def test_sample_csv_returns_200(self, client):
+        """Test GET /sample.csv returns 200 OK."""
+        response = client.get("/sample.csv")
+        assert response.status_code == 200
+
+    def test_sample_csv_returns_csv_content(self, client):
+        """Test /sample.csv returns CSV content with expected headers."""
+        response = client.get("/sample.csv")
+        # CSV content type
+        content_type = response.headers.get("content-type", "")
+        assert "text/csv" in content_type or "text/plain" in content_type
+        # Verify CSV headers from the actual file
+        assert "Name,Email,College,Year" in response.text
+
+    def test_static_files_no_auth_required(self, client):
+        """Test static files do not require authentication."""
+        # Request without Authorization header should succeed
+        response = client.get("/privacy.html")
+        assert response.status_code == 200
+
+        response = client.get("/sample.csv")
+        assert response.status_code == 200
+
+    def test_nonexistent_static_file_returns_404(self, client):
+        """Test non-existent static file returns 404."""
+        response = client.get("/nonexistent.html")
+        assert response.status_code == 404
+
+    def test_api_routes_take_precedence_over_static(self, client):
+        """Test API routes take precedence over static file serving.
+
+        The /health endpoint should work even though static files are mounted at /.
+        """
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
