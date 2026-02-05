@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mealbot"
+version = "0.1.0"
+description = "A meal pairing application migrated from Go to Python"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Mealbot Team"}
+]
+
+dependencies = [
+    "flask~=3.0",
+    "flask-restful~=0.3",
+    "flask-cors~=4.0",
+    "sqlalchemy~=2.0",
+    "psycopg2-binary~=2.9",
+    "python-dotenv~=1.0",
+    "gunicorn~=22.0",
+    "requests~=2.32",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest~=8.0",
+    "pytest-cov~=5.0",
+    "black~=24.0",
+    "isort~=5.0",
+    "ruff~=0.6",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mealbot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
