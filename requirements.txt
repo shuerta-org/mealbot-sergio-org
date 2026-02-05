@@ -16,7 +16,7 @@ sqlalchemy>=2.0.0
 asyncpg>=0.29.0
 
 # Authentication (JWT with Auth0)
-python-jose[cryptography]>=3.3.0
+pyjwt[crypto]>=2.8.0
 
 # HTTP client (for Mailgun and external services)
 httpx>=0.26.0
