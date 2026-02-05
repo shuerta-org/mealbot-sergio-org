@@ -12,6 +12,7 @@ from flask_restful import Api
 
 from mealbot.config import Config, TestConfig
 from mealbot.middleware.cors import configure_cors
+from mealbot.routes.organizations import register_organization_routes
 from mealbot.utils import err_to_bytes
 
 
@@ -48,6 +49,9 @@ def create_app(config_override: Optional[dict[str, Any]] = None) -> Flask:
 
     # Store api reference on app for route registration in other modules
     app.api = api  # type: ignore[attr-defined]
+
+    # Register routes
+    register_organization_routes(api)
 
     # Register global error handlers
     register_error_handlers(app)
