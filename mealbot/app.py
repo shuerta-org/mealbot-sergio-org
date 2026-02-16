@@ -48,6 +48,27 @@ def create_app(testing=False):
     def static_files(filename):
         return send_from_directory(app.static_folder, filename)
 
+    # Organization domain routes (migrated from org.go, registered in server.go)
+    from mealbot.org import (
+        create_organization_handler,
+        cross_match_trait_handler,
+        get_organizations_handler,
+    )
+
+    _all_methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    app.add_url_rule(
+        "/orgs", "get_organizations", get_organizations_handler, methods=_all_methods
+    )
+    app.add_url_rule(
+        "/org", "create_organization", create_organization_handler, methods=_all_methods
+    )
+    app.add_url_rule(
+        "/crossmatchtrait",
+        "cross_match_trait",
+        cross_match_trait_handler,
+        methods=_all_methods,
+    )
+
     return app
 
 

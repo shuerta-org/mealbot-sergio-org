@@ -53,14 +53,14 @@ def log_and_write(body, status, function):
         function: Name of the calling function (for structured logging).
 
     Returns:
-        Flask Response with the given body and a 200 status code.
+        Flask Response with the given body and status code.
     """
     logger.debug(
         "%s",
         str(status),
         extra={"function": function},
     )
-    response = make_response(body, 200)
+    response = make_response(body, status)
     response.content_type = "application/json"
     return response
 
