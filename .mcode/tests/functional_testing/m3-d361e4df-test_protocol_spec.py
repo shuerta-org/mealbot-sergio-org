@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-16T21:03:42.780774+00:00
+Generated at: 2026-03-16T21:09:33.113276+00:00
 Project: mealbot-sergio-org
 Milestone: 3
 """
@@ -51,263 +51,165 @@ def resolve_env_placeholders(obj: Any) -> Any:
 TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
     json.loads(r'''[
     {
-        "name": "add_round_happy_path",
-        "category": "HAPPY_PATH",
-        "endpoint": "/round",
-        "method": "POST",
-        "description": "Create an organization, then add a new round to it, verify 201",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-rounds-add"
-            },
-            "extract_id_from": null
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-rounds-add",
-                "round": "2025-06-15T10:00:00Z"
-            },
-            "body": null
-        },
-        "expected_status": 201,
-        "cleanup": null
-    },
-    {
-        "name": "add_round_missing_org_param",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/round",
-        "method": "POST",
-        "description": "Attempt to add a round without the required 'org' query parameter",
-        "request_data": {
-            "path": {},
-            "query": {
-                "round": "2025-06-15T10:00:00Z"
-            },
-            "body": null
-        },
-        "expected_status": 400
-    },
-    {
-        "name": "add_round_missing_round_param",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/round",
-        "method": "POST",
-        "description": "Attempt to add a round without the required 'round' query parameter",
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-rounds-missing"
-            },
-            "body": null
-        },
-        "expected_status": 400
-    },
-    {
         "name": "get_rounds_happy_path",
         "category": "HAPPY_PATH",
+        "description": "Retrieve rounds for an organization that has no rounds yet",
         "endpoint": "/rounds",
         "method": "GET",
-        "description": "Create an org and retrieve its rounds list, verify 200 response with rounds array",
+        "request_data": {
+            "query": {
+                "org": "test-org-rounds"
+            }
+        },
         "setup": {
             "endpoint": "/org",
             "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
             "body": {
-                "org": "test-rounds-get"
-            },
-            "extract_id_from": null
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-rounds-get"
-            },
-            "body": null
+                "name": "test-org-rounds",
+                "admin": "admin@test.com"
+            }
         },
         "expected_status": 200,
-        "cleanup": null
+        "expected_response": {
+            "rounds": []
+        }
     },
     {
-        "name": "get_rounds_missing_org_param",
+        "name": "get_rounds_missing_org",
         "category": "MISSING_REQUIRED",
+        "description": "GET /rounds without org parameter returns 400",
         "endpoint": "/rounds",
         "method": "GET",
-        "description": "Attempt to retrieve rounds without the required 'org' query parameter",
-        "request_data": {
-            "path": {},
-            "query": {},
-            "body": null
-        },
+        "request_data": {},
         "expected_status": 400
     },
     {
-        "name": "get_rounds_empty_org",
-        "category": "BOUNDARY",
-        "endpoint": "/rounds",
-        "method": "GET",
-        "description": "Retrieve rounds for an organization that has no scheduled rounds, expecting an empty array",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-rounds-empty"
-            },
-            "extract_id_from": null
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-rounds-empty"
-            },
-            "body": null
-        },
-        "expected_status": 200,
-        "cleanup": null
-    },
-    {
-        "name": "reschedule_round_happy_path",
+        "name": "add_round_happy_path",
         "category": "HAPPY_PATH",
+        "description": "Schedule a new round for an organization",
         "endpoint": "/round",
         "method": "POST",
-        "description": "Create an org then call reschedule on round 0 (Go code returns 201 even if round does not exist since UPDATE affects 0 rows without error)",
+        "request_data": {
+            "query": {
+                "org": "test-org-addround",
+                "round": "2024-06-15 10:00:00"
+            }
+        },
         "setup": {
             "endpoint": "/org",
             "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
             "body": {
-                "org": "test-rounds-resched"
-            },
-            "extract_id_from": null
+                "name": "test-org-addround",
+                "admin": "admin@test.com"
+            }
         },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-rounds-resched",
-                "round": "2025-07-20T14:00:00Z",
-                "roundId": "0"
-            },
-            "body": null
-        },
-        "expected_status": 201,
-        "cleanup": null
+        "expected_status": 200
     },
     {
-        "name": "delete_round_happy_path",
-        "category": "HAPPY_PATH",
-        "endpoint": "/round",
-        "method": "DELETE",
-        "description": "Create an org then call delete on round 0 (Go code returns 201 even if round does not exist since DELETE affects 0 rows without error)",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-rounds-del"
-            },
-            "extract_id_from": null
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-rounds-del",
-                "roundId": "0"
-            },
-            "body": null
-        },
-        "expected_status": 201,
-        "cleanup": null
-    },
-    {
-        "name": "delete_round_missing_org_param",
+        "name": "add_round_missing_params",
         "category": "MISSING_REQUIRED",
+        "description": "POST /round without required query parameters returns 400",
         "endpoint": "/round",
-        "method": "DELETE",
-        "description": "Attempt to delete a round without the required 'org' query parameter",
+        "method": "POST",
         "request_data": {
-            "path": {},
             "query": {
-                "roundId": "0"
-            },
-            "body": null
+                "org": "test-org-addround"
+            }
         },
         "expected_status": 400
     },
     {
-        "name": "delete_round_missing_roundid_param",
+        "name": "delete_round_missing_params",
         "category": "MISSING_REQUIRED",
+        "description": "DELETE /round without required query parameters returns 400",
         "endpoint": "/round",
         "method": "DELETE",
-        "description": "Attempt to delete a round without the required 'roundId' query parameter",
         "request_data": {
-            "path": {},
             "query": {
-                "org": "test-rounds-del-missing"
-            },
-            "body": null
+                "org": "test-org-addround"
+            }
         },
         "expected_status": 400
     },
     {
         "name": "get_pairs_happy_path",
         "category": "HAPPY_PATH",
+        "description": "Retrieve pairs for an organization with no pairs yet",
         "endpoint": "/pairs",
         "method": "GET",
-        "description": "Retrieve pairs for an organization (expects empty roundPairs if no pairing rounds have been run)",
+        "request_data": {
+            "query": {
+                "org": "test-org-pairs"
+            }
+        },
         "setup": {
             "endpoint": "/org",
             "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
             "body": {
-                "org": "test-pairs-get"
-            },
-            "extract_id_from": null
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-pairs-get"
-            },
-            "body": null
+                "name": "test-org-pairs",
+                "admin": "admin@test.com"
+            }
         },
         "expected_status": 200,
-        "cleanup": null
+        "expected_response": {
+            "roundPairs": []
+        }
     },
     {
-        "name": "get_pairs_missing_org_param",
+        "name": "get_pairs_missing_org",
         "category": "MISSING_REQUIRED",
+        "description": "GET /pairs without org parameter returns 400",
         "endpoint": "/pairs",
         "method": "GET",
-        "description": "Attempt to retrieve pairs without the required 'org' query parameter",
-        "request_data": {
-            "path": {},
-            "query": {},
-            "body": null
-        },
+        "request_data": {},
         "expected_status": 400
+    },
+    {
+        "name": "rounds_method_not_allowed",
+        "category": "INVALID_INPUT",
+        "description": "POST to /rounds endpoint returns 405 (only GET allowed)",
+        "endpoint": "/rounds",
+        "method": "POST",
+        "request_data": {
+            "query": {
+                "org": "test-org"
+            }
+        },
+        "expected_status": 405
+    },
+    {
+        "name": "round_method_not_allowed",
+        "category": "INVALID_INPUT",
+        "description": "GET to /round endpoint returns 405 (only POST and DELETE allowed)",
+        "endpoint": "/round",
+        "method": "GET",
+        "request_data": {
+            "query": {
+                "org": "test-org",
+                "roundId": "0"
+            }
+        },
+        "expected_status": 405
+    },
+    {
+        "name": "pairs_method_not_allowed",
+        "category": "INVALID_INPUT",
+        "description": "POST to /pairs endpoint returns 405 (only GET allowed)",
+        "endpoint": "/pairs",
+        "method": "POST",
+        "request_data": {
+            "query": {
+                "org": "test-org"
+            }
+        },
+        "expected_status": 405
     }
 ]''')
 )
 
 # Base URL for API requests (from app discovery, includes host:port)
-BASE_URL = os.path.expandvars("")
-HEALTH_CHECK_ENDPOINT = os.path.expandvars("")
+BASE_URL = os.path.expandvars("http://localhost:8080")
+HEALTH_CHECK_ENDPOINT = os.path.expandvars("/")
 REQUEST_TIMEOUT = 30
 HEALTH_CHECK_URL = f"{BASE_URL.rstrip('/')}/{HEALTH_CHECK_ENDPOINT.lstrip('/')}"
 # Per-endpoint routing table for microservices DST
