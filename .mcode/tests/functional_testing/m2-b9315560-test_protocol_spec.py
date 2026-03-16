@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-16T21:12:12.639982+00:00
+Generated at: 2026-03-16T21:13:19.351295+00:00
 Project: mealbot-sergio-org
 Milestone: 2
 """
