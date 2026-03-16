@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-16T21:03:49.153746+00:00
+Generated at: 2026-03-16T21:10:14.137291+00:00
 Project: mealbot-sergio-org
 Milestone: 2
 """
@@ -51,193 +51,73 @@ def resolve_env_placeholders(obj: Any) -> Any:
 TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
     json.loads(r'''[
     {
-        "name": "post_members_happy_path",
-        "category": "HAPPY_PATH",
-        "endpoint": "/members",
-        "method": "POST",
-        "description": "Upload a CSV of members to an organization. Auth middleware blocks with 200 empty body since valid Auth0 JWT is unavailable.",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-org-members-happy"
-            }
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-org-members-happy"
-            },
-            "body": null,
-            "multipart": {
-                "field_name": "members",
-                "filename": "members.csv",
-                "content": "Name,Email,College,Year\nAlice Smith,alice@example.com,Engineering,2023\nBob Jones,bob@example.com,Science,2024\nCarol White,carol@example.com,Arts,2022\n",
-                "content_type": "text/csv"
-            }
-        },
-        "expected_status": 200
-    },
-    {
-        "name": "post_members_missing_org_param",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/members",
-        "method": "POST",
-        "description": "Attempt to upload members CSV without the required org query parameter. Auth middleware blocks with 200 empty body.",
-        "request_data": {
-            "path": {},
-            "query": {},
-            "body": null,
-            "multipart": {
-                "field_name": "members",
-                "filename": "members.csv",
-                "content": "Name,Email\nAlice,alice@example.com\n",
-                "content_type": "text/csv"
-            }
-        },
-        "expected_status": 200
-    },
-    {
-        "name": "post_members_invalid_csv_no_name_column",
-        "category": "INVALID_FORMAT",
-        "endpoint": "/members",
-        "method": "POST",
-        "description": "Upload a CSV that lacks a 'name' column header. Auth middleware blocks with 200 empty body.",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-org-members-badcsv"
-            }
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-org-members-badcsv"
-            },
-            "body": null,
-            "multipart": {
-                "field_name": "members",
-                "filename": "bad.csv",
-                "content": "Email,College\nalice@example.com,Engineering\n",
-                "content_type": "text/csv"
-            }
-        },
-        "expected_status": 200
-    },
-    {
-        "name": "post_members_no_auth",
+        "name": "get_members_no_auth_returns_empty",
         "category": "AUTH",
+        "description": "GET /members without Authorization header returns 200 with empty body due to Go auth middleware intercepting the request before the handler runs",
+        "endpoint": "/members",
+        "method": "GET",
+        "request_data": {
+            "query": {
+                "org": "testorg"
+            }
+        },
+        "expected_status": 200,
+        "expected_body": ""
+    },
+    {
+        "name": "post_members_no_auth_returns_empty",
+        "category": "AUTH",
+        "description": "POST /members without Authorization header returns 200 with empty body due to Go auth middleware intercepting the request before the handler runs",
         "endpoint": "/members",
         "method": "POST",
-        "description": "Attempt to upload members without providing an Authorization header. The Go auth middleware silently drops the request with 200 and empty body when auth fails.",
         "request_data": {
-            "path": {},
             "query": {
-                "org": "some-org"
-            },
-            "body": null,
-            "multipart": {
-                "field_name": "members",
-                "filename": "members.csv",
-                "content": "Name,Email\nAlice,alice@example.com\n",
-                "content_type": "text/csv"
-            },
-            "skip_auth": true
-        },
-        "expected_status": 200
-    },
-    {
-        "name": "get_members_happy_path",
-        "category": "HAPPY_PATH",
-        "endpoint": "/members",
-        "method": "GET",
-        "description": "Retrieve members for an organization. Auth middleware blocks with 200 empty body since valid Auth0 JWT is unavailable.",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-org-get-members"
+                "org": "testorg"
             }
         },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-org-get-members"
-            },
-            "body": null
-        },
-        "expected_status": 200
+        "expected_status": 200,
+        "expected_body": ""
     },
     {
-        "name": "get_members_missing_org_param",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/members",
-        "method": "GET",
-        "description": "Attempt to get members without the required org query parameter. Auth middleware blocks with 200 empty body.",
-        "request_data": {
-            "path": {},
-            "query": {},
-            "body": null
-        },
-        "expected_status": 200
-    },
-    {
-        "name": "get_members_empty_org",
-        "category": "BOUNDARY",
-        "endpoint": "/members",
-        "method": "GET",
-        "description": "Get members for an organization that has no members. Auth middleware blocks with 200 empty body.",
-        "setup": {
-            "endpoint": "/org",
-            "method": "POST",
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": "test-org-empty-members"
-            }
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-org-empty-members"
-            },
-            "body": null
-        },
-        "expected_status": 200
-    },
-    {
-        "name": "get_members_no_auth",
+        "name": "get_members_invalid_bearer_token",
         "category": "AUTH",
+        "description": "GET /members with an invalid Bearer token returns 200 with empty body because the Go auth middleware does not write an error response",
         "endpoint": "/members",
         "method": "GET",
-        "description": "Attempt to get members without providing an Authorization header. The Go auth middleware silently drops the request with 200 and empty body when auth fails.",
         "request_data": {
-            "path": {},
             "query": {
-                "org": "some-org"
+                "org": "testorg"
             },
-            "body": null,
-            "skip_auth": true
+            "headers": {
+                "Authorization": "Bearer invalid_token_value"
+            }
         },
-        "expected_status": 200
+        "expected_status": 200,
+        "expected_body": ""
+    },
+    {
+        "name": "get_members_malformed_auth_header",
+        "category": "AUTH",
+        "description": "GET /members with a malformed Authorization header (not Bearer format) returns 200 with empty body because the Go auth middleware silently rejects it",
+        "endpoint": "/members",
+        "method": "GET",
+        "request_data": {
+            "query": {
+                "org": "testorg"
+            },
+            "headers": {
+                "Authorization": "Basic dXNlcjpwYXNz"
+            }
+        },
+        "expected_status": 200,
+        "expected_body": ""
     }
 ]''')
 )
 
 # Base URL for API requests (from app discovery, includes host:port)
-BASE_URL = os.path.expandvars("")
-HEALTH_CHECK_ENDPOINT = os.path.expandvars("")
+BASE_URL = os.path.expandvars("http://localhost:9876")
+HEALTH_CHECK_ENDPOINT = os.path.expandvars("/")
 REQUEST_TIMEOUT = 30
 HEALTH_CHECK_URL = f"{BASE_URL.rstrip('/')}/{HEALTH_CHECK_ENDPOINT.lstrip('/')}"
 # Per-endpoint routing table for microservices DST
