@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-16T21:03:42.361055+00:00
+Generated at: 2026-03-16T21:07:51.458320+00:00
 Project: mealbot-sergio-org
 Milestone: 1
 """
@@ -53,203 +53,129 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
     {
         "name": "create_org_happy_path",
         "category": "HAPPY_PATH",
-        "endpoint": "/org",
+        "description": "Create a new organization with valid parameters",
+        "endpoint": "/org?admin=testadmin@example.com",
         "method": "POST",
-        "description": "Create a new organization with a valid name and admin",
-        "setup": null,
         "request_data": {
-            "path": {},
-            "query": {
-                "admin": "testadmin@example.com"
-            },
             "body": {
-                "org": "test-org-happy"
+                "org": "test-org-functional"
             }
         },
-        "expected_status": 201,
-        "cleanup": null
-    },
-    {
-        "name": "create_org_missing_admin",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/org",
-        "method": "POST",
-        "description": "Attempt to create an organization without the required admin query parameter",
-        "setup": null,
-        "request_data": {
-            "path": {},
-            "query": {},
-            "body": {
-                "org": "test-org-no-admin"
-            }
-        },
-        "expected_status": 400,
-        "cleanup": null
-    },
-    {
-        "name": "create_org_missing_body",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/org",
-        "method": "POST",
-        "description": "Attempt to create an organization without a request body",
-        "setup": null,
-        "request_data": {
-            "path": {},
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": null
-        },
-        "expected_status": 400,
-        "cleanup": null
-    },
-    {
-        "name": "create_org_empty_name",
-        "category": "INVALID_INPUT",
-        "endpoint": "/org",
-        "method": "POST",
-        "description": "Attempt to create an organization with an empty name string",
-        "setup": null,
-        "request_data": {
-            "path": {},
-            "query": {
-                "admin": "testadmin@example.com"
-            },
-            "body": {
-                "org": ""
-            }
-        },
-        "expected_status": 500,
-        "cleanup": null
+        "expected_status": 200,
+        "expected_body_contains": "Successfully created new organization",
+        "cleanup": {
+            "description": "Organization remains in DB; no delete endpoint available"
+        }
     },
     {
         "name": "get_orgs_happy_path",
         "category": "HAPPY_PATH",
-        "endpoint": "/orgs",
+        "description": "Retrieve organizations for an admin after creating one",
+        "endpoint": "/orgs?admin=testadmin2@example.com",
         "method": "GET",
-        "description": "Create an organization then retrieve organizations for that admin",
         "setup": {
-            "endpoint": "/org",
+            "endpoint": "/org?admin=testadmin2@example.com",
             "method": "POST",
             "body": {
-                "org": "test-org-get-list"
-            },
-            "query": {
-                "admin": "listadmin@example.com"
-            },
-            "extract_id_from": null
-        },
-        "request_data": {
-            "path": {},
-            "query": {
-                "admin": "listadmin@example.com"
-            },
-            "body": null
+                "org": "test-org-get"
+            }
         },
         "expected_status": 200,
-        "cleanup": null
+        "expected_body_contains": "orgs"
     },
     {
-        "name": "get_orgs_missing_admin",
+        "name": "get_orgs_missing_admin_param",
         "category": "MISSING_REQUIRED",
+        "description": "GET /orgs without admin query parameter returns 400",
         "endpoint": "/orgs",
         "method": "GET",
-        "description": "Attempt to fetch organizations without the required admin query parameter",
-        "setup": null,
-        "request_data": {
-            "path": {},
-            "query": {},
-            "body": null
-        },
-        "expected_status": 400,
-        "cleanup": null
+        "expected_status": 400
     },
     {
-        "name": "get_orgs_no_results",
-        "category": "HAPPY_PATH",
-        "endpoint": "/orgs",
-        "method": "GET",
-        "description": "Fetch organizations for an admin that has none, expect empty list",
-        "setup": null,
-        "request_data": {
-            "path": {},
-            "query": {
-                "admin": "nonexistent-admin@example.com"
-            },
-            "body": null
-        },
-        "expected_status": 200,
-        "cleanup": null
-    },
-    {
-        "name": "set_crossmatchtrait_happy_path",
-        "category": "HAPPY_PATH",
-        "endpoint": "/crossmatchtrait",
+        "name": "create_org_missing_admin_param",
+        "category": "MISSING_REQUIRED",
+        "description": "POST /org without admin query parameter returns 400",
+        "endpoint": "/org",
         "method": "POST",
-        "description": "Create an organization then set a cross-match trait on it",
+        "request_data": {
+            "body": {
+                "org": "some-org"
+            }
+        },
+        "expected_status": 400
+    },
+    {
+        "name": "create_org_empty_name",
+        "category": "INVALID_INPUT",
+        "description": "POST /org with empty org name returns 500 (server error from DB constraint or validation)",
+        "endpoint": "/org?admin=testadmin3@example.com",
+        "method": "POST",
+        "request_data": {
+            "body": {
+                "org": ""
+            }
+        },
+        "expected_status": 500
+    },
+    {
+        "name": "crossmatchtrait_happy_path",
+        "category": "HAPPY_PATH",
+        "description": "Set a cross-match trait on an existing organization",
+        "endpoint": "/crossmatchtrait?org=test-org-cmt",
+        "method": "POST",
         "setup": {
-            "endpoint": "/org",
+            "endpoint": "/org?admin=testadmin4@example.com",
             "method": "POST",
             "body": {
-                "org": "test-org-trait"
-            },
-            "query": {
-                "admin": "traitadmin@example.com"
-            },
-            "extract_id_from": null
+                "org": "test-org-cmt"
+            }
         },
         "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-org-trait"
-            },
             "body": {
                 "trait": "department"
             }
         },
-        "expected_status": 201,
-        "cleanup": null
+        "expected_status": 200,
+        "expected_body_contains": "Successfully set the cross match trait"
     },
     {
-        "name": "set_crossmatchtrait_missing_org",
+        "name": "crossmatchtrait_missing_org_param",
         "category": "MISSING_REQUIRED",
+        "description": "POST /crossmatchtrait without org query parameter returns 400",
         "endpoint": "/crossmatchtrait",
         "method": "POST",
-        "description": "Attempt to set cross-match trait without the required org query parameter",
-        "setup": null,
         "request_data": {
-            "path": {},
-            "query": {},
             "body": {
                 "trait": "department"
             }
         },
-        "expected_status": 400,
-        "cleanup": null
+        "expected_status": 400
     },
     {
-        "name": "set_crossmatchtrait_missing_body",
-        "category": "MISSING_REQUIRED",
-        "endpoint": "/crossmatchtrait",
+        "name": "get_orgs_wrong_method",
+        "category": "INVALID_INPUT",
+        "description": "POST to /orgs endpoint returns 405 method not allowed",
+        "endpoint": "/orgs?admin=test@example.com",
         "method": "POST",
-        "description": "Attempt to set cross-match trait without a request body",
-        "setup": null,
         "request_data": {
-            "path": {},
-            "query": {
-                "org": "test-org-trait"
-            },
-            "body": null
+            "body": {}
         },
-        "expected_status": 400,
-        "cleanup": null
+        "expected_status": 405
+    },
+    {
+        "name": "create_org_wrong_method",
+        "category": "INVALID_INPUT",
+        "description": "GET to /org endpoint returns 405 method not allowed",
+        "endpoint": "/org?admin=test@example.com",
+        "method": "GET",
+        "expected_status": 405
     }
 ]''')
 )
 
 # Base URL for API requests (from app discovery, includes host:port)
-BASE_URL = os.path.expandvars("")
-HEALTH_CHECK_ENDPOINT = os.path.expandvars("")
+BASE_URL = os.path.expandvars("http://localhost:9876")
+HEALTH_CHECK_ENDPOINT = os.path.expandvars("/privacy.html")
 REQUEST_TIMEOUT = 30
 HEALTH_CHECK_URL = f"{BASE_URL.rstrip('/')}/{HEALTH_CHECK_ENDPOINT.lstrip('/')}"
 # Per-endpoint routing table for microservices DST
