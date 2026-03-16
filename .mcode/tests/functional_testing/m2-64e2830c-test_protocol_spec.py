@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-16T19:24:42.515362+00:00
+Generated at: 2026-03-16T19:30:06.341224+00:00
 Project: mealbot-sergio-org
 Milestone: 2
 """
@@ -89,6 +89,7 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
         "endpoint": "/members",
         "method": "POST",
         "description": "Attempt to upload members CSV without the required 'org' query parameter, expect 400",
+        "setup": null,
         "request_data": {
             "path": {},
             "query": {},
@@ -101,7 +102,6 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
             }
         },
         "expected_status": 400,
-        "setup": null,
         "cleanup": null
     },
     {
@@ -109,8 +109,18 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
         "category": "INVALID_FORMAT",
         "endpoint": "/members",
         "method": "POST",
-        "description": "Upload a CSV file missing the required 'name' column header, expect 400 or 500 error",
-        "setup": null,
+        "description": "Upload a CSV file missing the required 'name' column header, expect 500 error since CSV validation happens after file save",
+        "setup": {
+            "endpoint": "/org",
+            "method": "POST",
+            "query": {
+                "admin": "testadmin2@example.com"
+            },
+            "body": {
+                "org": "test-invalid-csv-org"
+            },
+            "extract_id_from": null
+        },
         "request_data": {
             "path": {},
             "query": {
@@ -124,7 +134,7 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
                 "content_type": "text/csv"
             }
         },
-        "expected_status": 400,
+        "expected_status": 500,
         "cleanup": null
     },
     {
@@ -200,13 +210,13 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
         "endpoint": "/members",
         "method": "GET",
         "description": "Request GET /members without the required 'org' query parameter, expect 400",
+        "setup": null,
         "request_data": {
             "path": {},
             "query": {},
             "body": null
         },
         "expected_status": 400,
-        "setup": null,
         "cleanup": null
     },
     {
@@ -240,8 +250,8 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
 )
 
 # Base URL for API requests (from app discovery, includes host:port)
-BASE_URL = os.path.expandvars("")
-HEALTH_CHECK_ENDPOINT = os.path.expandvars("")
+BASE_URL = os.path.expandvars("http://localhost:8080")
+HEALTH_CHECK_ENDPOINT = os.path.expandvars("/")
 REQUEST_TIMEOUT = 30
 HEALTH_CHECK_URL = f"{BASE_URL.rstrip('/')}/{HEALTH_CHECK_ENDPOINT.lstrip('/')}"
 # Per-endpoint routing table for microservices DST
